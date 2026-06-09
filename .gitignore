@@ -1,57 +1,45 @@
- # ──────────────────────────────────────────
-  # SECRETS — never commit these
-  # ──────────────────────────────────────────
-  .env
-  .env.*
-  !.env.example
-  *.pem
-  *.key
-  secrets.*
-  credentials.*
-  *.token
+# Secrets - never commit these
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.*
+credentials.*
+*.token
 
-  # ──────────────────────────────────────────
-  # DATA — real customer data stays out
-  # ──────────────────────────────────────────
-  data/
-  *.csv
-  *.db
-  *.sqlite
-  *.sqlite3
-  *.parquet
+# Data - real customer data stays out
+data/
+*.csv
+*.db
+*.sqlite
+*.sqlite3
+*.parquet
 
-  # ──────────────────────────────────────────
-  # PYTHON
-  # ──────────────────────────────────────────
-  __pycache__/
-  *.pyc
-  *.pyo
-  *.pyd
-  .venv/
-  venv/
-  env/
-  .pytest_cache/
-  .mypy_cache/
-  .coverage
-  *.egg-info/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.coverage
+*.egg-info/
 
-  # ──────────────────────────────────────────
-  # EDITORS / IDE
-  # ──────────────────────────────────────────
-  .vscode/
-  .idea/
-  *.swp
-  *.swo
+# Editors / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-  # ──────────────────────────────────────────
-  # OS JUNK
-  # ──────────────────────────────────────────
-  .DS_Store
-  Thumbs.db
-  desktop.ini
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
 
-  # ──────────────────────────────────────────
-  # LOGS
-  # ──────────────────────────────────────────
-  *.log
-  logs/
+# Logs
+*.log
+logs/
