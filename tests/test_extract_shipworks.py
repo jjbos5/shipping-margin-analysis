@@ -21,3 +21,8 @@ def test_extract_orders_accepts_connection_argument():
     """extract_orders should accept a database connection"""
     result = extract_orders(None)
     assert isinstance(result, pd.DataFrame)
+
+def test_extract_orders_accepts_date_range():
+    """extract_orders should accept date range"""
+    result = extract_orders(conn=None, start_date='2024-01-01', end_date='2024-12-31')
+    assert isinstance(result, pd.DataFrame)
