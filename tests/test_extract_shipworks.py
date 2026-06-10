@@ -16,3 +16,8 @@ def test_extract_orders_returns_expected_columns():
     result = extract_orders()
     expected_columns = ['order_id', 'order_date', 'shipping_cost', 'order_total']
     assert list(result.columns) == expected_columns 
+
+def test_extract_orders_accepts_connection_argument():
+    """extract_orders should accept a database connection"""
+    result = extract_orders(None)
+    assert isinstance(result, pd.DataFrame)
