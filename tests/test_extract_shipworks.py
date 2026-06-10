@@ -10,3 +10,9 @@ def test_extract_orders_returns_dataframe():
     """extract_orders should return a pandas DataFrame"""
     result = extract_orders()
     assert isinstance(result, pd.DataFrame)
+
+def test_extract_orders_returns_expected_columns():
+    """extract_orders should return a DataFrame with the bake-off columns."""
+    result = extract_orders()
+    expected_columns = ['order_id', 'order_date', 'shipping_cost', 'order_total']
+    assert list(result.columns) == expected_columns 
