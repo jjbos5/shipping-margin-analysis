@@ -1,2 +1,6 @@
+import pandas as pd 
+
 def extract_orders():
-    pass 
+    return pd.DataFrame()
+
+
