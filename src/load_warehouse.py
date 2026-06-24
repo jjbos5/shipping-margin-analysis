@@ -1,2 +1,2 @@
-def load_orders():
+def load_orders(df):
     print("hi")
