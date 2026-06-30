@@ -1,2 +1,2 @@
-def load_orders(df, conn=None):
-    print("hi")
+def load_orders(df, conn):
+    df.to_sql("orders", conn, index=False)
