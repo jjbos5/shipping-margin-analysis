@@ -1,4 +1,4 @@
-import src.simulation as sim
+import src.simulations as sim
 
 def test_simulation_is_callable():
     assert callable(sim.simulations)
