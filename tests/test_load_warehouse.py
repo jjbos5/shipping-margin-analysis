@@ -11,4 +11,10 @@ def test_load_orders_writes_in_database():
     result = pd.read_sql("SELECT * FROM orders", conn)
     assert len(result) == 2
 
-    
+def test_load_orders_replaces_data():
+    df = pd.DataFrame({"order_id": [1, 2]})
+    conn = sqlite3.connect(":memory:")
+    lwh.load_orders(df, conn)
+    lwh.load_orders(df, conn)
+    result = pd.read_sql("SELECT * FROM orders", conn)
+    assert len(result) == 2
