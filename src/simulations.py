@@ -3,4 +3,9 @@ def simulations():
 
 def net_bleed(df):
     shipping_calc = (df["shipping_charged"] - df["shipping_cost"]).sum() 
-    return 
+    return shipping_calc
+
+def free_shipping(df):
+    free = df[df["shipping_charged"] ==0]
+    shipping_calc = (free["shipping_charged"] - free["shipping_cost"]).sum()
+    return shipping_calc
