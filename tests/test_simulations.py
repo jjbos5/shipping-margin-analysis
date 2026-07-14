@@ -15,3 +15,9 @@ def test_when_shipping_was_free():
         "shipping_cost": [15.00, 24.00, 10.00, 36.00]  })
     result = sim.free_shipping(test2)
     assert result == -70
+
+def test_when_shipping_was_paid():
+    test3 = pd.DataFrame({"shipping_charged": [24.00, 0.00, 36.00, 123.00], 
+        "shipping_cost": [24.00, 45.00, 36.00, 123.00]})
+    result = sim.paid_shipping(test3)
+    assert result == 0
