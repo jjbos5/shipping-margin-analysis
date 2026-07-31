@@ -14,6 +14,6 @@ def test_column_names():
 
 def test_filtered_by_year_data():
     dates = pd.DataFrame({"OrderDate": ["2023-05-01", "2024-06-15", 
-        "2025-03-20", "2026-02-10"]})
+        "2025-03-20", "2026-02-10 12:00:00.777000"]})
     result = rd.filter_year(dates, 2024, 2025)
     assert len(result) == 2 
