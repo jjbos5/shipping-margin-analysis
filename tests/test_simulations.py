@@ -21,3 +21,11 @@ def test_when_shipping_was_paid():
         "shipping_cost": [24.00, 45.00, 36.00, 123.00]})
     result = sim.paid_shipping(test3)
     assert result == 0
+
+def test_bleed_by_year():
+    test4 = pd.DataFrame({"OrderDate": ["2023-05-01", "2024-06-15", 
+        "2025-03-20", "2026-02-10 12:00:00.777000", "2024-07-27"],
+        "shipping_charged": [24.00, 0.00, 36.00, 123.00, 23.00], 
+        "shipping_cost": [24.00, 45.00, 36.00, 123.00, 60.00]})
+    result = sim.bleed_by_year(test4)
+    assert result[2024] == -82
