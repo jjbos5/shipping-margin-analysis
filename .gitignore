@@ -7,6 +7,7 @@
 secrets.*
 credentials.*
 *.token
+NEXT.md
 
 # Data - real customer data stays out
 data/
