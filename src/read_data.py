@@ -8,5 +8,5 @@ def standardize_columns(df):
 
 def filter_year(df, start_year, end_year):
     df["OrderDate"] = pd.to_datetime(df["OrderDate"], format='ISO8601')
-    filter = df[(df["OrderDate"].dt.year >= start_year) & (df["OrderDate"].dt.year <= end_year)]
-    return filter
+    year_filter = df[(df["OrderDate"].dt.year >= start_year) & (df["OrderDate"].dt.year <= end_year)]
+    return year_filter
