@@ -1,111 +1,86 @@
 # Shipping Margin Analysis
 
-> End-to-end data pipeline with a dashboard that recovered $42k/yr in shipping margin by identifying the right product markup.
-
----
+> A test-driven data pipeline analyzing 16,000 real orders across 11 years of a
+> company's shipping history — findings validated against an independent audit to 0.1%.
 
 ## TL;DR
 
-Analyzed 3 years of shipping data from an e-commerce company's ShipWorks SQL database to understand a persistent margin loss. Built a SQL pipeline + Streamlit dashboard that simulates 5 alternative shipping policies on 3 years of historical orders, showing the projected financial outcome of each. The chosen markup-funded bucket model eliminated a ~$42k/yr loss and added ~$17k/yr profit — a ~$60k/yr swing.
-
----
+I built a Python pipeline (pandas, test-driven with pytest — 23 tests) on 16,000 orders
+spanning 11 years of shipping data. It found the company lost **−$108,847 over 2023–2025 —
+about $36k/yr — on shipping.** I validated the number two ways: two independently built
+methods (a date-filtered sum and a per-year groupby) agree to the dollar, and an independent
+audit of the same data came within 0.1%. The fix: product prices were raised ~25% so every
+sale funds a per-order shipping budget (the "bucket"). Most orders ship free within their
+bucket; when the real carrier cost exceeds it, the customer pays the difference — capping
+shipping exposure per order. Deployed June 2026; monitoring shows shipping running within budget.
 
 ## The Problem
 
-The site had a long-standing shipping policy: free shipping on orders over $75, and a $6 flat rate on orders under that. The policy looked reasonable on the surface — until one day a shipping invoice came back at **$100 to ship a single $75 order**, meaning the company was losing money outright. Three years of order history confirmed it: the company was bleeding **~$42k/yr** on shipping, and no one had noticed because shipping cost was folded into COGS instead of tracked as its own line item. The question this project answers: **what shipping policy would actually make the company money on freight, without scaring customers away at checkout?**
+The store offered free shipping on orders over $75 and a $6 flat rate under that. It looked
+reasonable — until a carrier invoice came back at $100 to ship a single $75 order. Shipping
+cost was folded into COGS instead of tracked as its own line, so nobody could see the bleed:
+about $36k/yr in recent years.
 
----
+## The Chart
 
-## The Approach
+![Net shipping bleed by year](assets/bleed_by_year.png)
 
-Rather than raise shipping prices blindly and hope they'd cover costs, I wanted evidence-based proof of what would actually fix the bleed. The pipeline simulates **5 alternative shipping policies** against the historical order data: (A) the current policy as a control, (B) raising the markup with a free-shipping threshold, (C) free shipping on every order, (D) full passthrough where the customer pays the carrier rate, and (E) a markup-funded "bucket" model where each sale contributes a small margin pool that absorbs shipping cost.
+Since 2020 — the free-shipping era — the company lost $34–49k every year. One caveat I
+discovered: the pre-2020 "profit" partly rests on rows with unrecorded costs, so the early
+positives are less certain than the losses.
 
-The results were stark: the current policy (A) was the worst by a wide margin. (C) and (D) either lost money or only broke even. The bucket model (E) was best-of-both-worlds — it generated **+$17k/yr in profit** while keeping shipping free or low-cost on most orders, preserving the customer-friendly feel that the company is known for.
+## How the Numbers Were Validated
 
----
+Trust has layers, and each check only covers its own:
 
-## Findings: 5-Policy Bake-Off
+1. **Is the math right?** Two independently built methods agree to the dollar, and an
+   independent audit of the same source data came within 0.1%.
+2. **Are the inputs clean?** A validation layer checks every run — and caught a real
+   problem (next section).
+3. **Are the inputs complete?** Honest limitation: everything derives from one source
+   system. Completeness is an assumption, stated openly.
 
-| Policy | Description | Projected Annual P/L | vs. Current |
-|---|---|---:|---:|
-| **A. Current** | Free over $75 / $6 flat under | **−$42k** | — |
-| B. Markup + Free $75 | Raise prices, keep $75 threshold | −$2k | +$40k |
-| C. Free Shipping | Free on every order | −$4k | +$38k |
-| D. Passthrough | Customer pays real carrier rate | $0 | +$42k |
-| **E. Bucket Model** ✅ | Margin pool absorbs shipping cost | **+$17k** | **+$59k** |
+## Data Quality: the 343 Rows
 
-The simulation results were shocking. The company had been losing ~$42k/yr on shipping under the existing policy. Three of the four alternatives reduced the loss but didn't eliminate it. Only the bucket model (E) flipped shipping from negative to positive — every order contributes a small margin pool that absorbs shipping cost, so customers still see free or low-cost shipping at checkout while the company stops bleeding. I deployed the model to production in June 2026, and the first real production orders confirmed the bucket math to the penny. Shipping has been profitable ever since.
+The validator reported `missing_cost: 0` but `zero_cost: 343` — missing data disguised as
+zeros: costs that were never recorded, stored as $0. Of the 343: **205 charged customers
+real money with no recorded cost, creating +$26K of fake "profit"**; 138 charged nothing
+and net to $0. Decision: **flag and disclose** these rows alongside every result rather
+than silently exclude them — the reader judges.
 
----
+## What's in the Repo
 
-## Architecture
+- `src/read_data.py` — read the CSV, standardize column names, filter by year range
+- `src/validate.py` — data-quality report (zero / negative / missing cost counts)
+- `src/simulations.py` — net bleed, by-lane and by-year aggregations
+- `src/charts.py` — matplotlib charts saved to `assets/`
+- `src/pipeline.py` — `run_analysis()`: the one-call chain
+- `src/extract_shipworks.py` — SQL Server extractor (tests mock the connection)
+- `src/load_warehouse.py` — SQLite warehouse loader
 
-```mermaid
-flowchart LR
-    A[ShipWorks SQL Server<br/>3yr order + shipping cost data] -->|pyodbc| C
-    B[Product catalog<br/>SKU + pricing data] -->|pandas| C
-    C[Python ETL<br/>clean / join / normalize] -->|load| D[(SQLite Warehouse<br/>orders · products · shipments)]
-    D -->|read| E{Bake-Off Simulator<br/>5 policy scenarios}
-    E -->|outputs| F[Streamlit Dashboard<br/>interactive P/L by policy]
-    E -->|outputs| G[bakeoff.png<br/>committed to /assets]
+## Data Policy
 
-    style A fill:#fef3c7,stroke:#d97706
-    style B fill:#fef3c7,stroke:#d97706
-    style C fill:#dbeafe,stroke:#2563eb
-    style D fill:#d1fae5,stroke:#059669
-    style E fill:#ede9fe,stroke:#7c3aed
-    style F fill:#fce7f3,stroke:#db2777
-    style G fill:#fce7f3,stroke:#db2777
-```
-
-The pipeline extracts 3 years of order and shipping-cost data from a production SQL Server warehouse, joins it with product catalog + pricing data, and loads a clean SQLite warehouse keyed on order/product/shipment. The simulator reads from SQLite and applies each of the 5 candidate shipping policies as a SQL transform, projecting annual P/L for every policy. Outputs feed both an interactive Streamlit dashboard (for stakeholder review) and a static PNG (committed to `/assets/` so the README renders without running anything).
-
-For public reproducibility, this repo uses **synthetic data** that mimics the real schema — no proprietary company data leaves the source system.
-
----
+- **Never committed:** raw order data (`*.csv`), internal file paths, and the local runner
+  script — all gitignored.
+- **Public:** code, tests, and aggregate yearly totals — the same numbers a stakeholder
+  report would show.
 
 ## Tech Stack
 
-**Language**
-- Python 3.11+
-
-**Data**
-- Microsoft SQL Server (source — order + shipping history) via `pyodbc`
-- MongoDB Atlas (source — product catalog + pricing) via `pymongo`
-- SQLite (analysis warehouse)
-
-**Analysis**
-- pandas, numpy
-
-**Visualization**
-- matplotlib (static charts committed to `/assets`)
-- Streamlit (interactive dashboard)
-
-**Testing**
-- pytest
-- gitleaks (pre-commit secret scanning)
-
-**Dev**
-- Git
-- python-dotenv (env management)
-- venv
-
----
+Python 3.12 · pandas · matplotlib · pytest (23 tests, TDD) · pymssql (SQL Server extractor) · SQLite · Git
 
 ## Status & Roadmap
 
-**Current status:** M0 — repo scaffolding & README.
-
-**Roadmap:**
-- [x] **M0** — Repo, README, gitignore, env scaffolding
-- [ ] **M1** — ShipWorks SQL extractor + tests
-- [ ] **M2** — SQLite warehouse loader
-- [ ] **M3** — Bake-off simulator (5 policies)
-- [ ] **M4** — Static chart generator → `/assets/bakeoff.png`
-- [ ] **M5** — Streamlit dashboard
-- [ ] **M6** — Synthetic data generator + public-data setup docs
-
----
+- [x] ShipWorks SQL extractor (mocked-connection tests)
+- [x] SQLite warehouse loader
+- [x] Read / standardize / year-filter on real data
+- [x] Bleed analysis — validated vs. independent audit (0.1%)
+- [x] Validation layer + the 343-row disclosure
+- [x] First real chart
+- [ ] Chart polish (currency axis, labels)
+- [ ] Streamlit dashboard
+- [ ] Synthetic demo dataset
+- [ ] Policy comparison — only if it can be done honestly at price parity
 
 ## License
 
