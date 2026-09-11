@@ -5,7 +5,7 @@
 
 ## TL;DR
 
-I built a Python pipeline (pandas, test-driven with pytest — 23 tests) on 16,000 orders
+I built a Python pipeline (pandas, test-driven with pytest — 24 tests) on 16,000 orders
 spanning 11 years of shipping data. It found the company lost **−$108,847 over 2023–2025 —
 about $36k/yr — on shipping.** I validated the number two ways: two independently built
 methods (a date-filtered sum and a per-year groupby) agree to the dollar, and an independent
@@ -26,8 +26,7 @@ about $36k/yr in recent years.
 ![Net shipping bleed by year](assets/bleed_by_year.png)
 
 Since 2020 — the free-shipping era — the company lost $34–49k every year. One caveat I
-discovered: the pre-2020 "profit" partly rests on rows with unrecorded costs, so the early
-positives are less certain than the losses.
+discovered: the pre-2020 "profit" was really the company breaking even. When we remove the 205 rows with unrecorded costs, the apparent profit shrinks ~80% (about $17.6k → $3.3k) and 2016 actually flips negative. The honest read: shipping roughly broke even until the free-shipping era began in 2020.
 
 ## How the Numbers Were Validated
 
@@ -47,6 +46,7 @@ zeros: costs that were never recorded, stored as $0. Of the 343: **205 charged c
 real money with no recorded cost, creating +$26K of fake "profit"**; 138 charged nothing
 and net to $0. Decision: **flag and disclose** these rows alongside every result rather
 than silently exclude them — the reader judges.
+The report now discloses the dollar impact, not just counts: the zero_cost_impact field shows the zero-cost rows carry $26,279 of apparent profit that isn't real - disclosed alongside every result 
 
 ## What's in the Repo
 
@@ -67,7 +67,7 @@ than silently exclude them — the reader judges.
 
 ## Tech Stack
 
-Python 3.12 · pandas · matplotlib · pytest (23 tests, TDD) · pymssql (SQL Server extractor) · SQLite · Git
+Python 3.12 · pandas · matplotlib · pytest (24 tests, TDD) · pymssql (SQL Server extractor) · SQLite · Git
 
 ## Status & Roadmap
 
@@ -77,6 +77,8 @@ Python 3.12 · pandas · matplotlib · pytest (23 tests, TDD) · pymssql (SQL Se
 - [x] Bleed analysis — validated vs. independent audit (0.1%)
 - [x] Validation layer + the 343-row disclosure
 - [x] First real chart
+- [x] Dollar-impact disclosure (zero_cost_impact) in the quality report
+- [x] Truth check: pre-2020 "profitable era" re-run without disguised rows (~80% artifact)
 - [ ] Chart polish (currency axis, labels)
 - [ ] Streamlit dashboard
 - [ ] Synthetic demo dataset
